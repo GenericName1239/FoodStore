@@ -1,0 +1,17 @@
+﻿@model IEnumerable<Category>
+
+
+<a asp-controller="Home" asp-action="HomeView" asp-route-category="" class="btn btn-block btn-outline-secondary bg-info text-white">
+    Home
+</a>
+
+@foreach(var cat in Model)
+{
+    <a asp-controller="Home" asp-action="HomeView" asp-route-category="@cat.CategoryName"
+       class="btn btn-block 
+       @(cat.CategoryName == ViewBag.SelectedCategory ? "btn-primary" : "btn-outline-secondary")"
+       bg-light text-dark"
+       >
+    @cat.CategoryName
+    </a>
+}

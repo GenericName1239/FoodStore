@@ -1,0 +1,12 @@
+﻿@page
+@model FoodStore.Pages.SearchModel
+
+
+<h5 class="justify-content-center">Search results</h5>
+
+@foreach(var product in Model.Products)
+{
+    <partial name="ProductSummaryPartial" model="product"/>
+}
+
+

@@ -1,0 +1,28 @@
+﻿@page
+@model FoodStore.Pages.CartModel
+
+<h3>Client# cart</h3>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Quantity</th>
+            <th>Item</th>
+            <th class="text-right">Price</th>
+            <th class="text-right">Item total price</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var cartLine in Model.Cart.CartLines)
+        {
+            <tr>
+                @cartLine.Quantity
+                @cartLine.Product.ProductName
+                @cartLine.Product.ProductPrice.ToString("c")
+            </tr>
+        }
+    </tbody>
+    <tfoot>
+
+    </tfoot>
+</table>
