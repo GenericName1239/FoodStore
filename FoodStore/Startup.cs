@@ -4,6 +4,8 @@ using FoodStore.Models.EFModels;
 using FoodStore.Models.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +32,21 @@ namespace FoodStore
             services.AddRazorPages();
             services.AddDbContext<FoodStoreContext>(options => 
             options.UseSqlServer(Configuration.GetConnectionString("FoodStoreConnection")));
+            services.AddDbContext<IdentityDbContext>(options => {
+                options.UseSqlServer(Configuration.GetConnectionString("IdentityFoodStoreConnection"), options =>
+                options.MigrationsAssembly("FoodStore"));
+            });
+            services.AddIdentity<IdentityUser, IdentityRole>(options => {
+
+                options.Password.RequiredLength = 4;
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.SignIn.RequireConfirmedAccount = true;
+
+            }).AddEntityFrameworkStores<IdentityDbContext>();
+            
             services.AddScoped<IProductRepo, EFProductModel>();
             services.AddSession();
             services.AddDistributedMemoryCache();
