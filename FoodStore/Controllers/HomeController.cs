@@ -1,6 +1,7 @@
 ﻿using FoodStore.Infrastructure;
 using FoodStore.Models.Interfaces;
 using FoodStore.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace FoodStore.Controllers
 {
+    [Authorize(Roles = "administrator")]
     public class HomeController : Controller
     {
         private IProductRepo productRepo;

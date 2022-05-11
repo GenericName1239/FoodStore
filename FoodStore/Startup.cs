@@ -46,7 +46,14 @@ namespace FoodStore
                 options.SignIn.RequireConfirmedAccount = true;
 
             }).AddEntityFrameworkStores<IdentityDbContext>();
-            
+
+            services.ConfigureApplicationCookie(options => {
+
+                options.LoginPath = "/Login/SignIn";
+                options.LogoutPath = "/Login/SignOut";
+                options.AccessDeniedPath = "/Login/Denied";
+            });
+
             services.AddScoped<IProductRepo, EFProductModel>();
             services.AddSession();
             services.AddDistributedMemoryCache();
@@ -55,7 +62,8 @@ namespace FoodStore
             services.AddAntiforgery(config => config.HeaderName = "XSRF-TOKEN");
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, 
+            UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             if (env.IsDevelopment())
             {
@@ -68,7 +76,10 @@ namespace FoodStore
 
             app.UseStaticFiles();
             app.UseSession();
+            SeedAdminData.Seed(userManager, roleManager);
+            app.UseAuthentication();
             app.UseRouting();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
