@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace FoodStore.Controllers
 {
-    [Authorize(Roles = "administrator")]
+    [Authorize]
     public class HomeController : Controller
     {
         private IProductRepo productRepo;
