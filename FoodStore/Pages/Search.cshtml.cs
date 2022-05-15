@@ -24,25 +24,31 @@ namespace FoodStore.Pages
             Products = new List<Product>();
         }
 
-        public IActionResult OnGet(string productSearch="")
+        public IActionResult OnGet(string productSearch)
         {
             Product product = null;
 
-            if (trie.Search(productSearch.ToLower()))
+            if(productSearch != null)
             {
-                productDict.productMap.TryGetValue(productSearch, out product);
-            }
+                productSearch = productSearch.ToLower();
 
-            if (product != null)
-            {
-                Products.Add(product);
-                return Page();
+                if (trie.Search(productSearch))
+                {
+                    productDict.productMap.TryGetValue(productSearch, out product);
+                }
+
+                if (product != null)
+                {
+                    Products.Add(product);
+                    return Page();
+                }
+
             }
 
             return RedirectToAction("HomeView", "Home");
         }
 
-        public JsonResult OnPostSearching(string prefix)
+        public JsonResult OnGetSearching(string prefix)
         {
             List<string> response = null;
 

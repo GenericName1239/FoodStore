@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
+using Newtonsoft.Json;
 using System.Threading.Tasks;
 
 namespace FoodStore.ExtensionMethods
@@ -11,13 +11,13 @@ namespace FoodStore.ExtensionMethods
     {
         public static void SetJson(this ISession session, string key, object value)
         {
-            session.SetString(key, JsonSerializer.Serialize(value));
+            session.SetString(key, JsonConvert.SerializeObject(value));
         }
 
         public static T GetJson<T>(this ISession session, string key)
         {
             var SessionData = session.GetString(key);
-            return SessionData == null ? default(T) : JsonSerializer.Deserialize<T>(SessionData);
+            return SessionData == null ? default(T) : JsonConvert.DeserializeObject<T>(SessionData);
         }
     }
 }

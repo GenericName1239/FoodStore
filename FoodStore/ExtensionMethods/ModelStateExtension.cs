@@ -16,5 +16,21 @@ namespace FoodStore.ExtensionMethods
                 modelState.AddModelError(error.Code, error.Description);
             }
         }
+     
+        public static void AddIdentityErrors(this SignInResult signInResult, string userName, ModelStateDictionary modelState)
+        {
+            if (signInResult.IsLockedOut)
+            {
+                modelState.AddModelError("UserLockedOut", userName + " is locked out.");
+            }
+            if(signInResult.IsNotAllowed)
+            {
+                modelState.AddModelError("UserNotAllowed", userName + " is not allowed.");
+            }
+            else
+            {
+                modelState.AddModelError("LoginFailed","Something went wrong.");
+            }
+        }
     }
 }

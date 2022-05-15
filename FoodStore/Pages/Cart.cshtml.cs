@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FoodStore.Data;
 using FoodStore.ExtensionMethods;
 using FoodStore.Models;
 using FoodStore.Models.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -13,11 +15,16 @@ namespace FoodStore.Pages
     public class CartModel : PageModel
     {
         private IProductRepo productRepo;
+        public FoodStoreContext storeContext { get; }
+        public IHttpContextAccessor httpContextAccessor;
+
         public Cart Cart { get; set; }
 
-        public CartModel(IProductRepo productRepo)
+        public CartModel(IProductRepo productRepo, FoodStoreContext storeContext, IHttpContextAccessor httpContextAccessor)
         {
             this.productRepo = productRepo;
+            this.storeContext = storeContext;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         public void OnGet(string returnUrl)
@@ -33,6 +40,5 @@ namespace FoodStore.Pages
             HttpContext.Session.SetJson("cart", Cart);
             return RedirectToPage(new { returnUrl = returnUrl });
         }
-
     }
 }

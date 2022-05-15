@@ -9,14 +9,13 @@ namespace FoodStore.Models
     {
         public CustCategory()
         {
-            CustHistories = new HashSet<CustHistory>();
             Customers = new HashSet<Customer>();
         }
 
-        public string CategoryId { get; set; }
-        public string CategoryName { get; set; }
 
-        public virtual ICollection<CustHistory> CustHistories { get; set; }
+        public string CustCategoryId { get; set; }
+        public string CategoryName { get; set; }
+        public virtual Offer Offer { get; set; }
         public virtual ICollection<Customer> Customers { get; set; }
     }
 }

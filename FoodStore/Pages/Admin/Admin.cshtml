@@ -1,75 +1,283 @@
 ﻿@page
 @model FoodStore.Pages.Admin.AdminModel
 
-    <partial name="ValidationPartial" />
-    <section class="vh-100" style="background-color: #eee;">
-        <div class="container h-100">
-            <div class="row d-flex justify-content-center align-items-center h-100">
-                <div class="col-lg-12 col-xl-11">
-                    <div class="card text-black" style="border-radius: 25px;">
-                        <div class="card-body p-md-5">
-                            <div class="row justify-content-center">
-                                <div class="col-md-10 col-lg-6 col-xl-5 order-2 order-lg-1">
+@Html.AntiForgeryToken()
 
-                                    <p class="text-center h1 fw-bold mb-5 mx-1 mx-md-4 mt-4">Admin panel</p>
-                                    <p class="text-center h4 fw-bold mb-5 mx-1 mx-md-4 mt-4">Change user claims, delete users</p>
-                                    <form class="mx-1 mx-md-4" method="post">
+<partial name="ValidationPartial" />
 
-                                        <div asp-validation-summary="All" class="text-danger"></div>
-                                        <div class="d-flex flex-row align-items-center mb-4">
-                                            <i class="fas fa-user fa-lg me-3 fa-fw"></i>
-                                            <div class="form-outline flex-fill mb-0">
-                                                <input type="text" class="form-control" asp-for="UserName"/>
-                                                <label class="form-label">Specify Username</label>
-                                            </div>
-                                        </div>
+<section style="background-color: #eee; height: 700px">
+    <div class="col-2 p-2 position-absolute">
+        <partial name="AdminNavigationPartial" />
+    </div>
+    <div class="container h-100">
+        <div class="row d-flex justify-content-center align-items-center h-100">
+            <div class="col-lg-12 col-xl-8">
+                <div class="card text-black" style="border-radius: 25px;">
+                    <div class="card-body">
+                        <div class="row justify-content-center">
+                            <div class="col-md-10 col-lg-12 col-xl-10">
 
-                                        <div class="d-flex flex-row align-items-center mb-4">
-                                            <i class="fas fa-envelope fa-lg me-3 fa-fw"></i>
-                                            <div class="form-outline flex-fill mb-0">
-                                                <input type="email" id="AddClaim" class="form-control" asp-for="Claim"/>
-                                                <label class="form-label">Add Claim</label>
-                                            </div>
-                                        </div>
+                                <p class="text-center h1 fw-bold mb-5 mx-1 mx-md-4 mt-4">Admin panel</p>
+                                <p class="text-center h5 fw-bold mx-1 mx-md-4 mt-4">Change user claims, delete users</p>
 
-                                        <div class="d-flex flex-row align-items-center mb-4">
-                                            <i class="fas fa-envelope fa-lg me-3 fa-fw"></i>
-                                            <div class="form-outline flex-fill mb-0">
-                                                <input type="checkbox" id="DeleteUser" asp-for="Delete"/>
-                                                <label class="form-label">Delete user</label>
-                                            </div>
-                                        </div>
-
-                                        <div class="d-flex justify-content-center mx-4 mb-3 mb-lg-4">
-                                            <button type="submit" class="btn btn-primary btn-lg">Confirm changes</button>
-                                        </div>
-
-                                    </form>
-
-                                </div>
+                                <form name="searchForm" class="mx-1 mx-md-4">
+                                    <div class="d-flex flex-row align-items-center mb-4">
+                                        <input id="SearchBar" type="search" name="userSearch" autocomplete="off"
+                                               placeholder="Search user" class="form-control" />
+                                        <button type="button" id="SearchAllBtn" class="text-dark border-light"><i class="fa fa-search p-2"></i></button>
+                                    </div>
+                                    <div id="searchComplete" class="list-group"></div>
+                                </form>
+                                <div id="TableContainer"></div>
+                                <div id="TableButtons"></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script type="text/javascript">
-        $(document).ready(function () {
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
 
-            document.getElementById("DeleteUser").addEventListener('click', DeleteUser);
+    $(document).ready(function () {
+        $("#SearchBar").keyup(function () {
 
-            function DeleteUser() {
+            $.ajax({
+                type: "GET",
+                url: "/Search?handler=Searching",
+                data: { "prefix": "user" + $("#SearchBar").val() },
+                success: function (response) {
 
-                if (document.getElementById("AddClaim").hidden) {
-                    document.getElementById("AddClaim").hidden = false;
+                    var list = document.createElement("li");
+                    list.setAttribute("id", "searchList");
+
+                    //remove's adding up to the list of prev search
+                    if (document.getElementById("searchComplete").hasChildNodes()) {
+                        document.getElementById("searchComplete").
+                            removeChild(document.getElementById("searchComplete").firstChild);
+                    }
+
+                    for (var i in response) {
+
+                        var btn = document.createElement("button");
+                        btn.setAttribute("type", "button");
+                        btn.setAttribute("id", "userBtn");
+                        btn.setAttribute("class", "list-group-item bg-dark text-white");
+                        response[i] = response[i].replace('user', '');
+                        btn.innerHTML = response[i];
+                        btn.style.display = 'grid';
+                        btn.style.textDecoration = 'none';
+                        btn.style.fontSize = '10px';
+                        btn.style.width = '300px';
+                        btn.style.zIndex = '1';
+
+                        list.appendChild(btn);
+                        console.log(btn);
+                    }
+
+                    document.getElementById("searchComplete").appendChild(list);
+                },
+                failure: function (response) {
+                    console.log("Fail", response);
+                },
+                error: function (response) {
+                    console.log("Error", response);
                 }
-                else {
-                    document.getElementById("AddClaim").hidden = true;
+            });
+        });
+
+        function CallTableEvents(ClientName) {
+
+            $.ajax({
+                type: 'GET',
+                url: '/Admin/Admin?handler=Search',
+                data: { "userName": ClientName },
+                success: function (response) {
+
+                    console.log(response);
+
+                    if (response != null) {
+                        DestroyTable();
+                        CreateUserTable(response);
+                    }
+                },
+                failure: function (response) {
+                    console.log("Fail", response);
+                },
+                error: function (response) {
+                    console.log("Error", response);
+                }
+            });
+        }
+
+        //on dynamic button click
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.id == 'userBtn') {
+
+                CallTableEvents(document.getElementById("userBtn").innerHTML);
+            }
+        });
+
+        document.getElementById("SearchAllBtn").addEventListener('click', function () {
+
+            CallTableEvents(document.getElementById("SearchBar").value);
+        });
+
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.id == 'closeTableButton') {
+                DestroyTable();
+            }
+        });
+
+        function CreateUserTable(client) {
+
+            var table = document.createElement("table");
+            table.setAttribute("id", "UsersTable");
+            table.setAttribute("class", "table table-bordered table-striped");
+
+            var thead = document.createElement("thead");
+            thead.setAttribute("class", "thead-dark");
+
+            var th1 = document.createElement("th");
+            var th2 = document.createElement("th");
+            var th3 = document.createElement("th");
+
+            th1.setAttribute("class", "text-center");
+            th2.setAttribute("class", "text-center");
+            th3.setAttribute("class", "text-center");
+
+            th1.innerHTML = "UserName";
+            th2.innerHTML = "Email";
+            th3.innerHTML = "Claim";
+
+            var tr = document.createElement("tr");
+
+            tr.appendChild(th1);
+            tr.appendChild(th2);
+            tr.appendChild(th3);
+
+            thead.appendChild(tr);
+            var tbody = document.createElement("tbody");
+
+            var td1 = document.createElement("td");
+            var td2 = document.createElement("td");
+            var td3 = document.createElement("td");
+
+            td3.setAttribute("contenteditable", "true");
+            td1.setAttribute("id", "UserNameTableCol");
+            td2.setAttribute("id", "EmailTableCol");
+            td3.setAttribute("id", "ClaimTableCol");
+
+            td1.innerHTML = client.userName;
+            td2.innerHTML = client.email;
+            td3.innerHTML = "some claim";
+
+            var Tbodytr = document.createElement("tr");
+
+            Tbodytr.appendChild(td1);
+            Tbodytr.appendChild(td2);
+            Tbodytr.appendChild(td3);
+
+            tbody.appendChild(Tbodytr);
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+
+            document.getElementById("TableContainer").appendChild(table);
+
+            var closeTableButton = document.createElement("button");
+            closeTableButton.setAttribute("id", "closeTableButton");
+            closeTableButton.setAttribute("class", "bg-info text-white");
+            closeTableButton.innerHTML = "Close table";
+
+            var updateTableButton = document.createElement("button");
+            updateTableButton.setAttribute("id", "updateTableButton");
+            updateTableButton.setAttribute("class", "bg-info text-white");
+            updateTableButton.innerHTML = "Update user";
+
+            var deleteTableButton = document.createElement("button");
+            deleteTableButton.setAttribute("id", "deleteTableButton");
+            deleteTableButton.setAttribute("class", "bg-info text-white");
+            deleteTableButton.innerHTML = "Delete user";
+
+            document.getElementById("TableButtons").appendChild(closeTableButton);
+            document.getElementById("TableButtons").appendChild(updateTableButton);
+            document.getElementById("TableButtons").appendChild(deleteTableButton);
+
+            //remove succestions
+            if (document.getElementById("userBtn")) {
+                document.getElementById("searchList").remove();
+            }
+        }
+
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.id == 'updateTableButton') {
+
+                if (confirm("Confirm update")) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/Admin/Admin?handler=Update',
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader("XSRF-TOKEN", $('input:hidden[name="__RequestVerificationToken"]').val());
+                        },
+                        data: {
+                            "userName": document.getElementById("UserNameTableCol").textContent,
+                            "claim": document.getElementById("ClaimTableCol").textContent
+                        },
+                        success: function (response) {
+                            console.log("User deleted!", response);
+                        },
+                        failure: function (response) {
+                            console.log("Fail", response);
+                        },
+                        error: function (response) {
+                            console.log("Error", response);
+                        }
+                    });
                 }
             }
-
         });
-    </script>
+
+
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.id == 'deleteTableButton') {
+
+                if (confirm("Confirm deletion of user")) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/Admin/Admin?handler=Delete',
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader("XSRF-TOKEN", $('input:hidden[name="__RequestVerificationToken"]').val());
+                        },
+                        data: { "userName": document.getElementById("UserNameTableCol").textContent },
+                        success: function (response) {
+                            console.log("User deleted!", response);
+                        },
+                        failure: function (response) {
+                            console.log("Fail", response);
+                        },
+                        error: function (response) {
+                            console.log("Error", response);
+                        }
+                    });
+                }
+            }
+        });
+
+
+        function DestroyTable() {
+
+            if (document.getElementById("UsersTable")) {
+                document.getElementById("UsersTable").remove();
+                document.getElementById("closeTableButton").remove();
+                document.getElementById("updateTableButton").remove();
+                document.getElementById("deleteTableButton").remove();
+            }
+        }
+
+    });
+
+</script>

@@ -1,40 +1,45 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using FoodStore.Infrastructure;
+using FoodStore.Models;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FoodStore.Data
 {
     public static class SeedAdminData
     {
-        public static void Seed(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
+        private static Trie Trie;
+
+        public static async Task Seed(UserManager<Customer> userManager, RoleManager<IdentityRole> roleManager)
         {
-            SeedRole(roleManager);
-            SeedUser(userManager);
+            await SeedRole(roleManager);
+            await SeedUser(userManager);
         }
 
-        private static void SeedUser(UserManager<IdentityUser> userManager)
+        private static async Task SeedUser(UserManager<Customer> userManager)
         {
             if(userManager.FindByNameAsync("admin").Result == null)
             {
-                IdentityUser user = new IdentityUser
+                Customer customer = new Customer
                 {
                     UserName = "admin",
                     Email = "admin@localhost.com",
                     EmailConfirmed = true
                 };
 
-                IdentityResult result = userManager.CreateAsync(user, "SecurePa55word123!").Result;
+                IdentityResult result = await userManager.CreateAsync(customer, "SecurePa55word123!");
 
                 if(result.Succeeded)
                 {
-                    userManager.AddToRoleAsync(user, "ADMINISTRATOR").Wait();
+                    await userManager.AddToRoleAsync(customer, "ADMINISTRATOR");
                 }
             }
         }
 
-        private static void SeedRole(RoleManager<IdentityRole> roleManager)
+        private static async Task SeedRole(RoleManager<IdentityRole> roleManager)
         {
             if(!roleManager.RoleExistsAsync("administrator").Result)
             {
@@ -43,7 +48,7 @@ namespace FoodStore.Data
                     Name = "administrator"
                 };
 
-                roleManager.CreateAsync(role);
+                await roleManager.CreateAsync(role);
             }
         }
     }

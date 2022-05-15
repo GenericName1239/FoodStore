@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using FoodStore.ExtensionMethods;
+using FoodStore.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -12,10 +13,11 @@ namespace FoodStore.Pages.Register
 {
     public class RegisterModel : PageModel
     {
-        private UserManager<IdentityUser> userManager;
-
+        private UserManager<Customer> userManager;
+ 
         [BindProperty]
         [Required(ErrorMessage = "Enter valid username!")]
+        [RegularExpression("^[a-zA-Z ]*$", ErrorMessage = "User name can contain only upper and lower case letters!")]
         public string Name { get; set; }
 
         [BindProperty]
@@ -35,7 +37,7 @@ namespace FoodStore.Pages.Register
         public string ConfirmPassword { get; set; }
 
 
-        public RegisterModel(UserManager<IdentityUser> userManager)
+        public RegisterModel(UserManager<Customer> userManager)
         {
             this.userManager = userManager;
         }
@@ -48,14 +50,14 @@ namespace FoodStore.Pages.Register
         {
             if(ModelState.IsValid)
             {
-                IdentityUser user = new IdentityUser
+                Customer customer = new Customer
                 {
                     UserName = Name,
                     Email = Email,
                     EmailConfirmed = true
                 };
 
-                IdentityResult result = await userManager.CreateAsync(user, Password);
+                IdentityResult result = await userManager.CreateAsync(customer, Password);
                 result.AddIdentityErrors(ModelState);
 
                 if(result.Succeeded)

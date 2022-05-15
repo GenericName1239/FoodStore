@@ -19,6 +19,7 @@ namespace FoodStore.Models
         public decimal ProductPrice { get; set; }
 
         public virtual Category Category { get; set; }
+        public virtual PriceOffer PriceOffer { get; set; }
         public virtual ICollection<ProductOrder> ProductOrders { get; set; }
     }
 }

@@ -1,11 +1,12 @@
 using FoodStore.Data;
 using FoodStore.Infrastructure;
+using FoodStore.Models;
 using FoodStore.Models.EFModels;
 using FoodStore.Models.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,11 +33,8 @@ namespace FoodStore
             services.AddRazorPages();
             services.AddDbContext<FoodStoreContext>(options => 
             options.UseSqlServer(Configuration.GetConnectionString("FoodStoreConnection")));
-            services.AddDbContext<IdentityDbContext>(options => {
-                options.UseSqlServer(Configuration.GetConnectionString("IdentityFoodStoreConnection"), options =>
-                options.MigrationsAssembly("FoodStore"));
-            });
-            services.AddIdentity<IdentityUser, IdentityRole>(options => {
+           
+            services.AddIdentity<Customer, IdentityRole>(options => {
 
                 options.Password.RequiredLength = 4;
                 options.Password.RequireDigit = false;
@@ -45,7 +43,7 @@ namespace FoodStore
                 options.Password.RequireNonAlphanumeric = false;
                 options.SignIn.RequireConfirmedAccount = true;
 
-            }).AddEntityFrameworkStores<IdentityDbContext>();
+            }).AddEntityFrameworkStores<FoodStoreContext>();
 
             services.ConfigureApplicationCookie(options => {
 
@@ -60,10 +58,11 @@ namespace FoodStore
             services.AddSingleton<Trie>();
             services.AddSingleton<ProductDict>();
             services.AddAntiforgery(config => config.HeaderName = "XSRF-TOKEN");
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, 
-            UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
+            UserManager<Customer> userManager, RoleManager<IdentityRole> roleManager)
         {
             if (env.IsDevelopment())
             {
@@ -76,7 +75,7 @@ namespace FoodStore
 
             app.UseStaticFiles();
             app.UseSession();
-            SeedAdminData.Seed(userManager, roleManager);
+            SeedAdminData.Seed(userManager, roleManager).Wait();
             app.UseAuthentication();
             app.UseRouting();
             app.UseAuthorization();
@@ -86,14 +85,11 @@ namespace FoodStore
                 endpoints.MapControllerRoute("CategoryPage", "{category}Page{pageIndx:int}", 
                     new { Controller = "Home", Action = "HomeView" });
 
-                endpoints.MapControllerRoute("Page", "Page{pageIndx:int}",
+                endpoints.MapControllerRoute("Pagination", "Products/Page{pageIndx:int}",
                    new { Controller = "Home", Action = "HomeView" });
 
                 endpoints.MapControllerRoute("Category", "{category}",
                    new { Controller = "Home", Action = "HomeView" });
-
-                endpoints.MapControllerRoute("Pagination", "Products/Page{pageIndx:int}", 
-                    new { Controller = "Home", Action = "HomeView" });
 
                 endpoints.MapControllerRoute("HomePage", "/", 
                     new { Controller = "Home", Action = "HomeView"});

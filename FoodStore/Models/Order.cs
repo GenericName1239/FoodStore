@@ -12,7 +12,7 @@ namespace FoodStore.Models
             ProductOrders = new HashSet<ProductOrder>();
         }
 
-        public string OrderId { get; set; }
+        public int OrderId { get; set; }
         public string CustomerId { get; set; }
         public string AddressLine { get; set; }
         public string City { get; set; }

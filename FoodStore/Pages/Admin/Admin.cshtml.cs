@@ -8,54 +8,75 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
+using FoodStore.Models;
+using FoodStore.ExtensionMethods;
+using FoodStore.Data;
 
 namespace FoodStore.Pages.Admin
 {
     [Authorize(Roles = "administrator")]
     public class AdminModel : PageModel
     {
-        private UserManager<IdentityUser> userManager;
-
-        [BindProperty]
-        [Required(ErrorMessage = "Username is required!")]
-        public string UserName { get; set; }
-
-        [BindProperty]
-        public string Claim { get; set; }
-
-        [BindProperty]
-        public bool Delete { get; set; }
+        public UserManager<Customer> userManager { get; set; }
+        private FoodStoreContext storeContext;
+  
+        public AdminModel(UserManager<Customer> userManager, FoodStoreContext storeContext)
+        {
+            this.userManager = userManager;
+            this.storeContext = storeContext;
+        }
 
         public void OnGet()
         {
         }
 
-
-        public AdminModel(UserManager<IdentityUser> userManager)
+        private void UpdateProductPriceOffer(CustCategory category)
         {
-            this.userManager = userManager;
-        }
+            var offer = storeContext.Offers.Where(p => p.CustCategoryId == category.CustCategoryId).FirstOrDefault();
 
-        public async Task<IActionResult> OnPost()
-        {
-            if(ModelState.IsValid)
+            foreach(var product in storeContext.Products.ToList())
             {
-                IdentityUser user = await userManager.FindByNameAsync(UserName);
-
-                if(user == null) { 
-                    ModelState.AddModelError("UserDontExist", "This user dosn't exist!"); 
-                }
-                else
+                decimal newPrice = Math.Round(product.ProductPrice - (product.ProductPrice * offer.DiscountProcent), 2);
+                
+                storeContext.PriceOffers.Add(new PriceOffer
                 {
-                    if (Delete) { await userManager.DeleteAsync(user); }
-                    else
-                    {
-                        await userManager.AddClaimAsync(user, new Claim(Claim, "true"));
-                    }
-                }              
-            }
+                    PromotionalText = product.ProductName +" discounted from "+ product.ProductPrice.ToString("c"),
+                    NewPrice = newPrice,
+                    OfferId = offer.OfferId,
+                    ProductId = product.ProductId
+                });
 
-            return Page();
+                storeContext.SaveChanges();
+            }
         }
+
+        public async Task<JsonResult> OnGetSearch(string userName)
+        {
+            Customer customer = await userManager.FindByNameAsync(userName);
+
+            return new JsonResult(customer);
+        }
+
+        public void OnPostUpdate(string userName, string claim)
+        {
+            var client = storeContext.Customers.Where(p => p.UserName == userName).FirstOrDefault();
+            var category = storeContext.CustCategories.Where(p => p.CategoryName == claim).FirstOrDefault();
+
+            if(category != null)
+            {
+                client.CustCategoryId = category.CustCategoryId;
+                storeContext.SaveChanges();
+                UpdateProductPriceOffer(category);
+            }
+            else { ModelState.AddModelError("ClaimUpdate", "This claim dosn't exist in database!"); }
+        }
+
+        public async Task OnPostDelete(string userName)
+        {
+            Customer customer = await userManager.FindByNameAsync(userName);
+            IdentityResult result = await userManager.DeleteAsync(customer);
+            result.AddIdentityErrors(ModelState);
+        }
+
     }
 }

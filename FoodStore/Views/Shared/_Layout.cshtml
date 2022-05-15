@@ -4,22 +4,20 @@
 <head>
     <meta name="viewport" content="width=device-width" />
     <link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/js/bootstrap-select.js"></script>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <title>FoodStore</title>
 </head>
-<body>
+<body style="background-color: #eee;">
 
     <div class="bg-dark text-white p-2">
         <span class="navbar-brand ml-2 text-center">TITLE</span>
         <form name="searchForm" asp-page="/Search" method="get" class="navbar-brand">
-            <div class="search-wrapper">
-                <input id="SearchBar" type="search" name="productSearch" autocomplete="off"/>
+            <div class="d-flex flex-row align-items-center">
+                <input id="SearchBar" type="search" name="productSearch" autocomplete="off" placeholder="Search" size="40" class="form-control" />
+                <button type="submit" class="bg-info"><i class="fa fa-search"></i></button>
             </div>
-            <div id="searchComplete" class="list-group"></div>
-        </form>
+            <div id="searchComplete" class="list-group position-absolute"></div>
+        </form>    
     </div>
     <div class="row m-1 p-1">
         <div class="col-3">
@@ -36,11 +34,8 @@
             $("#SearchBar").keyup(function () {
 
                 $.ajax({
-                    type: "POST",
+                    type: "GET",
                     url: "/Search?handler=Searching",
-                    beforeSend: function (xhr) {
-                        xhr.setRequestHeader("XSRF-TOKEN", $('input:hidden[name="__RequestVerificationToken"]').val());
-                    },
                     data: { "prefix": $("#SearchBar").val() },
                     success: function (response) {
 
@@ -53,24 +48,27 @@
                                 removeChild(document.getElementById("searchComplete").firstChild);
                         }
 
+                        let cnt = 0;
                         for (var i in response)
                         {
-                            var btn = document.createElement("button");
-                            btn.setAttribute("id", "searchForm");
-                            btn.setAttribute("type", "search");
-                            btn.setAttribute("name", response[i]);
+                            cnt++;
+                            var btn = document.createElement("a");
+                            var SearchRequest = new Request('/Search?productSearch='+response[i]);
+                            btn.href = SearchRequest.url;
                             btn.setAttribute("class", "list-group-item bg-dark text-white");
                             btn.innerHTML = response[i];
+                            btn.style.display = 'grid';
+                            btn.style.textDecoration = 'none';
+                            btn.style.fontSize = '15px';
+                            btn.style.width = '350px';
+                            btn.style.zIndex = '1';
 
-                            list.appendChild(btn);
+                            //limts search succestion size to N => 5 items
+                            if (cnt < 6) {
+                                list.appendChild(btn);
+                            }
+
                             console.log(btn);
-                        }
-
-                        if (response == null)
-                        {
-                            var element = document.createElement("p");
-                            element.innerHTML = "No content found!";
-                            list.appendChild(element);
                         }
 
                         document.getElementById("searchComplete").appendChild(list);

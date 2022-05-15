@@ -8,7 +8,7 @@ namespace FoodStore.Models
     public partial class ProductOrder
     {
         public string ProductId { get; set; }
-        public string OrderId { get; set; }
+        public int OrderId { get; set; }
         public int? Quantity { get; set; }
 
         public virtual Order Order { get; set; }
